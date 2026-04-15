@@ -85,7 +85,7 @@ const userInitials = computed(() => {
 })
 
 const menuRoutes = computed(() => {
-  const dashboardRoute = router.getRoutes().find(r => r.path === '/')
+  const dashboardRoute = router.getRoutes().find(r => r.path === '/' && r.children?.length > 0)
   return dashboardRoute?.children?.filter(r => r.meta?.isMenuItem) || []
 })
 
