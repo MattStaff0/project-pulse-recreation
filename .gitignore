@@ -22,3 +22,6 @@ frontend/dist/
 
 # MySQL data (if local)
 mysql_data/
+
+# Issues file
+issues.md
