@@ -12,7 +12,9 @@ public class WebConfig implements WebMvcConfigurer {
         // Forward all non-API, non-static routes to index.html for Vue Router
         registry.addViewController("/{spring:[\\w-]+}")
                 .setViewName("forward:/index.html");
-        registry.addViewController("/**/{spring:[\\w-]+}")
+        registry.addViewController("/{path1:[\\w-]+}/{path2:[\\w-]+}")
+                .setViewName("forward:/index.html");
+        registry.addViewController("/{path1:[\\w-]+}/{path2:[\\w-]+}/{path3:[\\w-]+}")
                 .setViewName("forward:/index.html");
     }
 }
