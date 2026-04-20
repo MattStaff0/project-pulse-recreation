@@ -54,8 +54,6 @@ async function loadData() {
     // Get teammates from same team
     const studentRes = await getStudents({ teamId: userInfoStore.userInfo.teamId || '' })
     const allStudents = studentRes.data || []
-    // Include self in evaluations
-    teammates.value = allStudents
 
     // Get rubric criteria from section
     const secRes = await getSections()
@@ -67,13 +65,14 @@ async function loadData() {
       if (rubric) criteria.value = rubric.criteria
     }
 
-    // Initialize eval data for each teammate
-    for (const mate of teammates.value) {
+    // Initialize eval data for each teammate before setting teammates to avoid render errors
+    for (const mate of allStudents) {
       evalData[mate.id] = { publicComment: '', privateComment: '', ratings: {} }
       for (const c of criteria.value) {
         evalData[mate.id].ratings[c.id] = 0
       }
     }
+    teammates.value = allStudents
   } catch {} finally { loading.value = false }
 }
 
