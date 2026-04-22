@@ -1,5 +1,6 @@
 package team.projectpulse.section;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import team.projectpulse.course.Course;
 import team.projectpulse.course.CourseRepository;
@@ -14,6 +15,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("${api.endpoint.base-url}/sections")
+@PreAuthorize("hasRole('admin')")
 public class SectionController {
 
     private final SectionService sectionService;

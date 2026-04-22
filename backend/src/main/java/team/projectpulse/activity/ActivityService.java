@@ -2,6 +2,7 @@ package team.projectpulse.activity;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import team.projectpulse.security.AuthorizationService;
 import team.projectpulse.system.exception.ObjectNotFoundException;
 
 import java.util.List;
@@ -11,9 +12,11 @@ import java.util.List;
 public class ActivityService {
 
     private final ActivityRepository activityRepository;
+    private final AuthorizationService authorizationService;
 
-    public ActivityService(ActivityRepository activityRepository) {
+    public ActivityService(ActivityRepository activityRepository, AuthorizationService authorizationService) {
         this.activityRepository = activityRepository;
+        this.authorizationService = authorizationService;
     }
 
     public List<Activity> findByStudentAndWeek(Long studentId, Integer week) {
@@ -38,11 +41,16 @@ public class ActivityService {
     }
 
     public Activity save(Activity activity) {
+        if (activity.getStudent() == null) {
+            throw new IllegalArgumentException("Student is required");
+        }
+        authorizationService.requireCanCreateActivityForStudent(activity.getStudent().getId());
         return activityRepository.save(activity);
     }
 
     public Activity update(Long id, Activity update) {
         Activity existing = findById(id);
+        authorizationService.requireCanManageActivity(existing);
         existing.setCategory(update.getCategory());
         existing.setActivity(update.getActivity());
         existing.setDescription(update.getDescription());
@@ -54,7 +62,8 @@ public class ActivityService {
     }
 
     public void delete(Long id) {
-        findById(id);
+        Activity existing = findById(id);
+        authorizationService.requireCanManageActivity(existing);
         activityRepository.deleteById(id);
     }
 }

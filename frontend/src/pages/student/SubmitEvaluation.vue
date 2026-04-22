@@ -33,8 +33,8 @@ import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useUserInfoStore } from '@/stores/userInfo'
 import { getStudents } from '@/apis/student'
-import { getRubrics } from '@/apis/rubric'
-import { getSections } from '@/apis/section'
+import { getRubricById } from '@/apis/rubric'
+import { getSectionById } from '@/apis/section'
 import { createEvaluation } from '@/apis/evaluation'
 
 const router = useRouter()
@@ -51,20 +51,25 @@ onMounted(loadData)
 async function loadData() {
   loading.value = true
   try {
+    if (!userInfoStore.userInfo?.teamId || !userInfoStore.userInfo?.sectionId) {
+      teammates.value = []
+      criteria.value = []
+      return
+    }
+
     // Get teammates from same team
-    const studentRes = await getStudents({ teamId: userInfoStore.userInfo.teamId || '' })
+    const studentRes = await getStudents({ teamId: userInfoStore.userInfo.teamId })
     const allStudents = studentRes.data || []
     // Include self in evaluations
     teammates.value = allStudents
 
     // Get rubric criteria from section
-    const secRes = await getSections()
-    const sections = secRes.data || []
-    if (sections.length > 0 && sections[0].rubricId) {
-      const rubRes = await getRubrics()
-      const rubrics = rubRes.data || []
-      const rubric = rubrics.find(r => r.id === sections[0].rubricId)
-      if (rubric) criteria.value = rubric.criteria
+    const secRes = await getSectionById(userInfoStore.userInfo.sectionId)
+    const section = secRes.data || {}
+    if (section.rubricId) {
+      const rubRes = await getRubricById(section.rubricId)
+      const rubric = rubRes.data || null
+      if (rubric) criteria.value = rubric.criteria || []
     }
 
     // Initialize eval data for each teammate

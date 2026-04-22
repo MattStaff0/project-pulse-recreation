@@ -1,6 +1,7 @@
 package team.projectpulse.activity;
 
 import org.springframework.web.bind.annotation.*;
+import team.projectpulse.security.AuthorizationService;
 import team.projectpulse.student.Student;
 import team.projectpulse.student.StudentService;
 import team.projectpulse.system.Result;
@@ -18,17 +19,20 @@ public class ActivityController {
     private final ActivityService activityService;
     private final StudentService studentService;
     private final TeamService teamService;
+    private final AuthorizationService authorizationService;
 
-    public ActivityController(ActivityService activityService, StudentService studentService, TeamService teamService) {
+    public ActivityController(ActivityService activityService, StudentService studentService, TeamService teamService, AuthorizationService authorizationService) {
         this.activityService = activityService;
         this.studentService = studentService;
         this.teamService = teamService;
+        this.authorizationService = authorizationService;
     }
 
     @GetMapping
     public Result findAll(@RequestParam(required = false) Long studentId,
                           @RequestParam(required = false) Long teamId,
                           @RequestParam(required = false) Integer week) {
+        authorizationService.requireCanReadActivities(studentId, teamId);
         List<Activity> activities;
         if (studentId != null && week != null) {
             activities = activityService.findByStudentAndWeek(studentId, week);
@@ -47,7 +51,9 @@ public class ActivityController {
 
     @GetMapping("/{id}")
     public Result findById(@PathVariable Long id) {
-        return new Result(true, StatusCode.SUCCESS, "Find activity successfully", toDto(activityService.findById(id)));
+        Activity activity = activityService.findById(id);
+        authorizationService.requireCanReadActivity(activity);
+        return new Result(true, StatusCode.SUCCESS, "Find activity successfully", toDto(activity));
     }
 
     @PostMapping

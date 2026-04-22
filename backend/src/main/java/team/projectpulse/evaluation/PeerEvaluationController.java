@@ -1,6 +1,7 @@
 package team.projectpulse.evaluation;
 
 import org.springframework.web.bind.annotation.*;
+import team.projectpulse.security.AuthorizationService;
 import team.projectpulse.rubric.Criterion;
 import team.projectpulse.rubric.CriterionRepository;
 import team.projectpulse.student.Student;
@@ -18,17 +19,20 @@ public class PeerEvaluationController {
     private final PeerEvaluationService evaluationService;
     private final StudentService studentService;
     private final CriterionRepository criterionRepository;
+    private final AuthorizationService authorizationService;
 
-    public PeerEvaluationController(PeerEvaluationService evaluationService, StudentService studentService, CriterionRepository criterionRepository) {
+    public PeerEvaluationController(PeerEvaluationService evaluationService, StudentService studentService, CriterionRepository criterionRepository, AuthorizationService authorizationService) {
         this.evaluationService = evaluationService;
         this.studentService = studentService;
         this.criterionRepository = criterionRepository;
+        this.authorizationService = authorizationService;
     }
 
     @GetMapping
     public Result findByEvaluator(@RequestParam(required = false) Long evaluatorId,
                                    @RequestParam(required = false) Long evaluateeId,
                                    @RequestParam(required = false) Integer week) {
+        authorizationService.requireCanReadEvaluations(evaluatorId, evaluateeId);
         List<PeerEvaluation> evals;
         if (evaluatorId != null && week != null) {
             evals = evaluationService.findByEvaluatorAndWeek(evaluatorId, week);
@@ -47,7 +51,12 @@ public class PeerEvaluationController {
 
     @GetMapping("/{id}")
     public Result findById(@PathVariable Long id) {
-        return new Result(true, StatusCode.SUCCESS, "Find evaluation successfully", toDto(evaluationService.findById(id)));
+        PeerEvaluation evaluation = evaluationService.findById(id);
+        authorizationService.requireCanReadEvaluations(
+                evaluation.getEvaluator() != null ? evaluation.getEvaluator().getId() : null,
+                evaluation.getEvaluatee() != null ? evaluation.getEvaluatee().getId() : null
+        );
+        return new Result(true, StatusCode.SUCCESS, "Find evaluation successfully", toDto(evaluation));
     }
 
     @PostMapping
@@ -99,6 +108,7 @@ public class PeerEvaluationController {
 
     // Instructor generates section-wide report
     @GetMapping("/report/section/{sectionId}")
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('instructor')")
     public Result sectionReport(@PathVariable Long sectionId, @RequestParam Integer week) {
         return new Result(true, StatusCode.SUCCESS, "Section report generated", evaluationService.generateSectionReport(sectionId, week));
     }

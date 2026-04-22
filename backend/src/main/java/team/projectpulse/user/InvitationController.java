@@ -1,5 +1,6 @@
 package team.projectpulse.user;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import team.projectpulse.system.Result;
 import team.projectpulse.system.StatusCode;
@@ -8,6 +9,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("${api.endpoint.base-url}/invitations")
+@PreAuthorize("hasRole('admin')")
 public class InvitationController {
 
     private final UserService userService;

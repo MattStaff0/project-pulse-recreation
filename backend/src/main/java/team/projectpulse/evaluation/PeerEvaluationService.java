@@ -2,8 +2,7 @@ package team.projectpulse.evaluation;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import team.projectpulse.rubric.Criterion;
-import team.projectpulse.rubric.CriterionRepository;
+import team.projectpulse.security.AuthorizationService;
 import team.projectpulse.student.Student;
 import team.projectpulse.student.StudentRepository;
 import team.projectpulse.system.exception.ObjectNotFoundException;
@@ -17,14 +16,14 @@ public class PeerEvaluationService {
 
     private final PeerEvaluationRepository peerEvaluationRepository;
     private final StudentRepository studentRepository;
-    private final CriterionRepository criterionRepository;
+    private final AuthorizationService authorizationService;
 
     public PeerEvaluationService(PeerEvaluationRepository peerEvaluationRepository,
                                   StudentRepository studentRepository,
-                                  CriterionRepository criterionRepository) {
+                                  AuthorizationService authorizationService) {
         this.peerEvaluationRepository = peerEvaluationRepository;
         this.studentRepository = studentRepository;
-        this.criterionRepository = criterionRepository;
+        this.authorizationService = authorizationService;
     }
 
     public PeerEvaluation findById(Long id) {
@@ -49,6 +48,21 @@ public class PeerEvaluationService {
     }
 
     public PeerEvaluation save(PeerEvaluation evaluation) {
+        if (evaluation.getEvaluator() == null || evaluation.getEvaluatee() == null) {
+            throw new IllegalArgumentException("Evaluator and evaluatee are required");
+        }
+        authorizationService.requireStudentEvaluationSubmission(
+                evaluation.getEvaluator().getId(),
+                evaluation.getEvaluatee().getId()
+        );
+        if (peerEvaluationRepository.findByEvaluatorIdAndEvaluateeIdAndWeek(
+                evaluation.getEvaluator().getId(),
+                evaluation.getEvaluatee().getId(),
+                evaluation.getWeek()
+        ).isPresent()) {
+            throw new IllegalArgumentException("Peer evaluation already submitted for this teammate and week");
+        }
+        validateActiveWeek(evaluation.getEvaluator(), evaluation.getWeek());
         // Calculate total score from ratings
         double total = evaluation.getRatings().stream()
                 .mapToDouble(r -> r.getScore() != null ? r.getScore() : 0)
@@ -58,22 +72,12 @@ public class PeerEvaluationService {
     }
 
     public PeerEvaluation update(Long id, PeerEvaluation update) {
-        PeerEvaluation existing = findById(id);
-        existing.getRatings().clear();
-        for (Rating rating : update.getRatings()) {
-            existing.addRating(rating);
-        }
-        existing.setPublicComment(update.getPublicComment());
-        existing.setPrivateComment(update.getPrivateComment());
-        double total = existing.getRatings().stream()
-                .mapToDouble(r -> r.getScore() != null ? r.getScore() : 0)
-                .sum();
-        existing.setTotalScore(total);
-        return peerEvaluationRepository.save(existing);
+        throw new IllegalArgumentException("Peer evaluations cannot be edited once submitted");
     }
 
     // Generate report for a student for a specific week
     public Map<String, Object> generateStudentReport(Long studentId, Integer week) {
+        authorizationService.requireCanAccessStudent(studentId);
         List<PeerEvaluation> evals = peerEvaluationRepository.findByEvaluateeIdAndWeek(studentId, week);
         Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new ObjectNotFoundException("student", studentId));
@@ -125,5 +129,23 @@ public class PeerEvaluationService {
             reports.add(generateStudentReport(student.getId(), week));
         }
         return reports;
+    }
+
+    private void validateActiveWeek(Student evaluator, Integer week) {
+        if (week == null || week < 1) {
+            throw new IllegalArgumentException("Week must be a positive integer");
+        }
+        if (evaluator.getSection() == null || evaluator.getSection().getActiveWeeks() == null) {
+            return;
+        }
+        Set<Integer> activeWeeks = Arrays.stream(
+                        evaluator.getSection().getActiveWeeks().replace("[", "").replace("]", "").split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .map(Integer::valueOf)
+                .collect(Collectors.toSet());
+        if (!activeWeeks.isEmpty() && !activeWeeks.contains(week)) {
+            throw new IllegalArgumentException("Peer evaluations can only be submitted during active weeks");
+        }
     }
 }

@@ -1,5 +1,6 @@
 package team.projectpulse.user;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import team.projectpulse.system.Result;
 import team.projectpulse.system.StatusCode;
@@ -17,18 +18,21 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("@authz.isSelf(#id) or hasRole('admin')")
     public Result findById(@PathVariable Long id) {
         PeerEvaluationUser user = userService.findById(id);
         return new Result(true, StatusCode.SUCCESS, "Find user successfully", toDto(user));
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("@authz.isSelf(#id) or hasRole('admin')")
     public Result updateProfile(@PathVariable Long id, @RequestBody Map<String, String> body) {
         PeerEvaluationUser user = userService.updateProfile(id, body.get("firstName"), body.get("lastName"), body.get("email"));
         return new Result(true, StatusCode.SUCCESS, "Update user successfully", toDto(user));
     }
 
     @PutMapping("/{id}/password")
+    @PreAuthorize("@authz.isSelf(#id) or hasRole('admin')")
     public Result changePassword(@PathVariable Long id, @RequestBody Map<String, String> body) {
         userService.changePassword(id, body.get("oldPassword"), body.get("newPassword"));
         return new Result(true, StatusCode.SUCCESS, "Password changed successfully");
