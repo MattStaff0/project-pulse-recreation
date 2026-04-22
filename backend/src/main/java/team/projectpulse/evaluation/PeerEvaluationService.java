@@ -8,6 +8,7 @@ import team.projectpulse.student.StudentRepository;
 import team.projectpulse.system.exception.ObjectNotFoundException;
 
 import java.util.*;
+import java.time.LocalDate;
 import java.util.stream.Collectors;
 
 @Service
@@ -62,7 +63,7 @@ public class PeerEvaluationService {
         ).isPresent()) {
             throw new IllegalArgumentException("Peer evaluation already submitted for this teammate and week");
         }
-        validateActiveWeek(evaluation.getEvaluator(), evaluation.getWeek());
+        validateSubmissionWeek(evaluation.getEvaluator(), evaluation.getWeek());
         // Calculate total score from ratings
         double total = evaluation.getRatings().stream()
                 .mapToDouble(r -> r.getScore() != null ? r.getScore() : 0)
@@ -131,21 +132,57 @@ public class PeerEvaluationService {
         return reports;
     }
 
-    private void validateActiveWeek(Student evaluator, Integer week) {
+    private void validateSubmissionWeek(Student evaluator, Integer week) {
         if (week == null || week < 1) {
             throw new IllegalArgumentException("Week must be a positive integer");
         }
         if (evaluator.getSection() == null || evaluator.getSection().getActiveWeeks() == null) {
             return;
         }
-        Set<Integer> activeWeeks = Arrays.stream(
+        List<Integer> activeWeeks = Arrays.stream(
                         evaluator.getSection().getActiveWeeks().replace("[", "").replace("]", "").split(","))
                 .map(String::trim)
                 .filter(s -> !s.isEmpty())
                 .map(Integer::valueOf)
-                .collect(Collectors.toSet());
+                .sorted()
+                .collect(Collectors.toList());
         if (!activeWeeks.isEmpty() && !activeWeeks.contains(week)) {
             throw new IllegalArgumentException("Peer evaluations can only be submitted during active weeks");
         }
+        Integer allowedWeek = determineAllowedSubmissionWeek(evaluator, activeWeeks);
+        if (allowedWeek != null && !allowedWeek.equals(week)) {
+            throw new IllegalArgumentException("Peer evaluations can only be submitted for the previous active week");
+        }
+    }
+
+    private Integer determineAllowedSubmissionWeek(Student evaluator, List<Integer> activeWeeks) {
+        if (activeWeeks.isEmpty() || evaluator.getSection() == null
+                || evaluator.getSection().getStartDate() == null || evaluator.getSection().getEndDate() == null) {
+            return activeWeeks.isEmpty() ? null : activeWeeks.get(activeWeeks.size() - 1);
+        }
+
+        LocalDate today = LocalDate.now();
+        LocalDate startDate = evaluator.getSection().getStartDate();
+        LocalDate endDate = evaluator.getSection().getEndDate();
+
+        if (today.isBefore(startDate)) {
+            return null;
+        }
+
+        long calendarWeek = (today.toEpochDay() - startDate.toEpochDay()) / 7 + 1;
+        LocalDate oneWeekAfterEnd = endDate.plusDays(7);
+
+        int candidateWeek;
+        if (!today.isAfter(oneWeekAfterEnd)) {
+            candidateWeek = (int) calendarWeek - 1;
+        } else {
+            // Historical seeded sections in dev should still allow the last active week.
+            candidateWeek = activeWeeks.get(activeWeeks.size() - 1);
+        }
+
+        return activeWeeks.stream()
+                .filter(activeWeek -> activeWeek <= candidateWeek)
+                .max(Integer::compareTo)
+                .orElse(null);
     }
 }

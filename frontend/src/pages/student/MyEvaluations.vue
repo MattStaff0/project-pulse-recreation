@@ -5,7 +5,7 @@
       <el-button type="primary" @click="$router.push('/submit-evaluation')">Submit Evaluation</el-button>
     </div>
     <el-select v-model="selectedWeek" placeholder="Select Week" style="margin-bottom:16px;width:200px" @change="loadEvals">
-      <el-option v-for="w in 15" :key="w" :label="`Week ${w}`" :value="w" />
+      <el-option v-for="w in availableWeeks" :key="w" :label="`Week ${w}`" :value="w" />
     </el-select>
 
     <el-table :data="evaluations" stripe v-loading="loading">
@@ -25,18 +25,38 @@
 import { ref, onMounted } from 'vue'
 import { useUserInfoStore } from '@/stores/userInfo'
 import { getEvaluations } from '@/apis/evaluation'
+import { getSectionById } from '@/apis/section'
+import { getEvaluationWeekOptions } from '@/utils/sectionWeeks'
 
 const userInfoStore = useUserInfoStore()
 const evaluations = ref([])
 const loading = ref(false)
 const selectedWeek = ref(1)
+const availableWeeks = ref([1])
 
 async function loadEvals() {
+  if (!selectedWeek.value) {
+    evaluations.value = []
+    return
+  }
   loading.value = true
   try {
     const res = await getEvaluations({ evaluatorId: userInfoStore.userInfo.id, week: selectedWeek.value })
     evaluations.value = res.data || []
   } catch {} finally { loading.value = false }
 }
-onMounted(loadEvals)
+
+onMounted(async () => {
+  try {
+    if (userInfoStore.userInfo?.sectionId) {
+      const secRes = await getSectionById(userInfoStore.userInfo.sectionId)
+      const weekOptions = getEvaluationWeekOptions(secRes.data || {})
+      availableWeeks.value = weekOptions.activeWeeks
+      selectedWeek.value = weekOptions.defaultWeek ?? availableWeeks.value[0] ?? 1
+    }
+  } catch {
+    availableWeeks.value = [1]
+  }
+  loadEvals()
+})
 </script>
