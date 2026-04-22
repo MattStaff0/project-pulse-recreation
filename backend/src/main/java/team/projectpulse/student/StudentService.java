@@ -2,6 +2,8 @@ package team.projectpulse.student;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import team.projectpulse.activity.ActivityRepository;
+import team.projectpulse.evaluation.PeerEvaluationRepository;
 import team.projectpulse.system.exception.ObjectNotFoundException;
 
 import java.util.List;
@@ -11,9 +13,15 @@ import java.util.List;
 public class StudentService {
 
     private final StudentRepository studentRepository;
+    private final ActivityRepository activityRepository;
+    private final PeerEvaluationRepository peerEvaluationRepository;
 
-    public StudentService(StudentRepository studentRepository) {
+    public StudentService(StudentRepository studentRepository,
+                          ActivityRepository activityRepository,
+                          PeerEvaluationRepository peerEvaluationRepository) {
         this.studentRepository = studentRepository;
+        this.activityRepository = activityRepository;
+        this.peerEvaluationRepository = peerEvaluationRepository;
     }
 
     public List<Student> findAll() {
@@ -50,7 +58,13 @@ public class StudentService {
     }
 
     public void delete(Long id) {
-        findById(id);
+        Student student = findById(id);
+        if (student.getTeam() != null) {
+            student.setTeam(null);
+            studentRepository.save(student);
+        }
+        activityRepository.deleteByStudentId(id);
+        peerEvaluationRepository.deleteByEvaluatorIdOrEvaluateeId(id, id);
         studentRepository.deleteById(id);
     }
 }

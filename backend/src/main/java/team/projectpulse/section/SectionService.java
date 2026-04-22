@@ -38,6 +38,9 @@ public class SectionService {
 
     public Section update(Long id, Section update) {
         Section existing = findById(id);
+        if (sectionRepository.existsByNameAndIdNot(update.getName(), id)) {
+            throw new IllegalArgumentException("Section name already exists: " + update.getName());
+        }
         existing.setName(update.getName());
         existing.setStartDate(update.getStartDate());
         existing.setEndDate(update.getEndDate());

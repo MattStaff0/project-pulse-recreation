@@ -6,4 +6,5 @@ import java.util.List;
 public interface SectionRepository extends JpaRepository<Section, Long> {
     List<Section> findByCourseId(Long courseId);
     boolean existsByName(String name);
+    boolean existsByNameAndIdNot(String name, Long id);
 }
