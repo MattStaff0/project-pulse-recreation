@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import team.projectpulse.system.Result;
 import team.projectpulse.system.StatusCode;
+import team.projectpulse.student.Student;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -34,6 +35,10 @@ public class AuthController {
         userInfo.put("email", user.getEmail());
         userInfo.put("roles", user.getRoles());
         userInfo.put("enabled", user.isEnabled());
+        if (user instanceof Student student) {
+            userInfo.put("teamId", student.getTeam() != null ? student.getTeam().getId() : null);
+            userInfo.put("sectionId", student.getSection() != null ? student.getSection().getId() : null);
+        }
 
         Map<String, Object> loginResult = new HashMap<>();
         loginResult.put("userInfo", userInfo);

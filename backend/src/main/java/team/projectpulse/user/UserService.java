@@ -3,11 +3,13 @@ package team.projectpulse.user;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import team.projectpulse.instructor.Instructor;
 import team.projectpulse.instructor.InstructorRepository;
+import team.projectpulse.security.AuthorizationService;
 import team.projectpulse.section.Section;
 import team.projectpulse.section.SectionRepository;
 import team.projectpulse.student.Student;
@@ -28,6 +30,7 @@ public class UserService {
     private final SectionRepository sectionRepository;
     private final PasswordEncoder passwordEncoder;
     private final JavaMailSender mailSender;
+    private final AuthorizationService authorizationService;
 
     private final String frontEndUrl;
 
@@ -39,6 +42,7 @@ public class UserService {
                        SectionRepository sectionRepository,
                        PasswordEncoder passwordEncoder,
                        JavaMailSender mailSender,
+                       AuthorizationService authorizationService,
                        @Value("${front-end.url:http://localhost:5173}") String frontEndUrl) {
         this.userRepository = userRepository;
         this.studentRepository = studentRepository;
@@ -48,6 +52,7 @@ public class UserService {
         this.sectionRepository = sectionRepository;
         this.passwordEncoder = passwordEncoder;
         this.mailSender = mailSender;
+        this.authorizationService = authorizationService;
         this.frontEndUrl = frontEndUrl;
     }
 
@@ -62,7 +67,13 @@ public class UserService {
     }
 
     public PeerEvaluationUser updateProfile(Long id, String firstName, String lastName, String email) {
+        authorizationService.requireSelfOrAdmin(id);
         PeerEvaluationUser user = findById(id);
+        userRepository.findByEmail(email)
+                .filter(existing -> !existing.getId().equals(id))
+                .ifPresent(existing -> {
+                    throw new IllegalArgumentException("An account with this email already exists");
+                });
         user.setFirstName(firstName);
         user.setLastName(lastName);
         user.setEmail(email);
@@ -70,8 +81,9 @@ public class UserService {
     }
 
     public void changePassword(Long id, String oldPassword, String newPassword) {
+        authorizationService.requireSelfOrAdmin(id);
         PeerEvaluationUser user = findById(id);
-        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+        if (!authorizationService.hasRole("admin") && !passwordEncoder.matches(oldPassword, user.getPassword())) {
             throw new IllegalArgumentException("Old password is incorrect");
         }
         user.setPassword(passwordEncoder.encode(newPassword));

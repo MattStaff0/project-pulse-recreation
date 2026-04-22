@@ -9,12 +9,12 @@
           <el-statistic title="Sections" :value="stats.sections" />
         </el-card>
       </el-col>
-      <el-col :span="8" v-if="userInfoStore.isInstructor">
+      <el-col :span="8" v-if="userInfoStore.isInstructor || userInfoStore.isAdmin">
         <el-card shadow="hover" style="cursor:pointer; border-radius: 12px" @click="$router.push('/teams')">
           <el-statistic title="Teams" :value="stats.teams" />
         </el-card>
       </el-col>
-      <el-col :span="8" v-if="userInfoStore.isInstructor">
+      <el-col :span="8" v-if="userInfoStore.isInstructor || userInfoStore.isAdmin">
         <el-card shadow="hover" style="cursor:pointer; border-radius: 12px" @click="$router.push('/students')">
           <el-statistic title="Students" :value="stats.students" />
         </el-card>
@@ -35,7 +35,7 @@ const stats = ref({ sections: 0, teams: 0, students: 0 })
 
 onMounted(async () => {
   try {
-    if (userInfoStore.isInstructor) {
+    if (userInfoStore.isInstructor || userInfoStore.isAdmin) {
       const [secRes, teamRes, stuRes] = await Promise.all([getSections(), getTeams(), getStudents()])
       stats.value.sections = secRes.data?.length || 0
       stats.value.teams = teamRes.data?.length || 0

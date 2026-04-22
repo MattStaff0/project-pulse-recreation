@@ -1,5 +1,6 @@
 package team.projectpulse.team;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import team.projectpulse.section.Section;
 import team.projectpulse.section.SectionService;
@@ -11,6 +12,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("${api.endpoint.base-url}/teams")
+@PreAuthorize("hasAnyRole('admin', 'instructor')")
 public class TeamController {
 
     private final TeamService teamService;
@@ -34,6 +36,7 @@ public class TeamController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('admin')")
     public Result create(@RequestBody Map<String, Object> body) {
         Team team = new Team();
         team.setName((String) body.get("name"));
@@ -47,6 +50,7 @@ public class TeamController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('admin')")
     public Result update(@PathVariable Long id, @RequestBody Map<String, Object> body) {
         Team update = new Team();
         update.setName((String) body.get("name"));
@@ -56,30 +60,35 @@ public class TeamController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('admin')")
     public Result delete(@PathVariable Long id) {
         teamService.delete(id);
         return new Result(true, StatusCode.SUCCESS, "Team deleted successfully");
     }
 
     @PostMapping("/{teamId}/students/{studentId}")
+    @PreAuthorize("hasRole('admin')")
     public Result assignStudent(@PathVariable Long teamId, @PathVariable Long studentId) {
         teamService.assignStudentToTeam(teamId, studentId);
         return new Result(true, StatusCode.SUCCESS, "Student assigned to team successfully");
     }
 
     @DeleteMapping("/{teamId}/students/{studentId}")
+    @PreAuthorize("hasRole('admin')")
     public Result removeStudent(@PathVariable Long teamId, @PathVariable Long studentId) {
         teamService.removeStudentFromTeam(teamId, studentId);
         return new Result(true, StatusCode.SUCCESS, "Student removed from team successfully");
     }
 
     @PostMapping("/{teamId}/instructors/{instructorId}")
+    @PreAuthorize("hasRole('admin')")
     public Result assignInstructor(@PathVariable Long teamId, @PathVariable Long instructorId) {
         teamService.assignInstructorToTeam(teamId, instructorId);
         return new Result(true, StatusCode.SUCCESS, "Instructor assigned to team successfully");
     }
 
     @DeleteMapping("/{teamId}/instructors/{instructorId}")
+    @PreAuthorize("hasRole('admin')")
     public Result removeInstructor(@PathVariable Long teamId, @PathVariable Long instructorId) {
         teamService.removeInstructorFromTeam(teamId, instructorId);
         return new Result(true, StatusCode.SUCCESS, "Instructor removed from team successfully");

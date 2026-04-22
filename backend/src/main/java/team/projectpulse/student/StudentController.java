@@ -1,5 +1,6 @@
 package team.projectpulse.student;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import team.projectpulse.system.Result;
 import team.projectpulse.system.StatusCode;
@@ -9,6 +10,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("${api.endpoint.base-url}/students")
+@PreAuthorize("hasAnyRole('admin', 'instructor')")
 public class StudentController {
 
     private final StudentService studentService;
@@ -49,6 +51,7 @@ public class StudentController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('admin')")
     public Result update(@PathVariable Long id, @RequestBody Map<String, String> body) {
         Student update = new Student();
         update.setFirstName(body.get("firstName"));
@@ -58,6 +61,7 @@ public class StudentController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('admin')")
     public Result delete(@PathVariable Long id) {
         studentService.delete(id);
         return new Result(true, StatusCode.SUCCESS, "Student deleted successfully");

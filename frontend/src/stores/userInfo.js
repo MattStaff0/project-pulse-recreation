@@ -10,7 +10,7 @@ export const useUserInfoStore = defineStore('userInfo', () => {
   })
 
   const isAdmin = computed(() => roles.value.includes('admin'))
-  const isInstructor = computed(() => roles.value.includes('instructor') || roles.value.includes('admin'))
+  const isInstructor = computed(() => roles.value.includes('instructor'))
   const isStudent = computed(() => roles.value.includes('student'))
 
   function setUserInfo(info) {

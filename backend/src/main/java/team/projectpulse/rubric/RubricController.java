@@ -1,5 +1,6 @@
 package team.projectpulse.rubric;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import team.projectpulse.course.Course;
 import team.projectpulse.course.CourseRepository;
@@ -11,6 +12,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("${api.endpoint.base-url}/rubrics")
+@PreAuthorize("hasRole('admin')")
 public class RubricController {
 
     private final RubricService rubricService;
