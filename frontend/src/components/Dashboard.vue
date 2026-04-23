@@ -92,7 +92,6 @@ const menuRoutes = computed(() => {
 function shouldShowRoute(route) {
   if (!route.meta?.requiresPermissions) return true
   const userRoles = userInfoStore.roles
-  if (userRoles.includes('admin')) return true
   return route.meta.requiresPermissions.some(p => userRoles.includes(p))
 }
 
