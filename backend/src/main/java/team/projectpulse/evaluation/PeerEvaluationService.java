@@ -83,8 +83,12 @@ public class PeerEvaluationService {
         Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new ObjectNotFoundException("student", studentId));
 
-        Map<String, Object> report = new HashMap<>();
+        Map<String, Object> report = new LinkedHashMap<>();
+        report.put("studentId", student.getId());
+        report.put("studentFirstName", student.getFirstName());
+        report.put("studentLastName", student.getLastName());
         report.put("studentName", student.getFirstName() + " " + student.getLastName());
+        report.put("teamName", student.getTeam() != null ? student.getTeam().getName() : null);
         report.put("week", week);
 
         if (evals.isEmpty()) {
@@ -123,13 +127,45 @@ public class PeerEvaluationService {
     }
 
     // Generate section-wide report for a specific week
-    public List<Map<String, Object>> generateSectionReport(Long sectionId, Integer week) {
+    public Map<String, Object> generateSectionReport(Long sectionId, Integer week) {
         List<Student> students = studentRepository.findBySectionId(sectionId);
         List<Map<String, Object>> reports = new ArrayList<>();
         for (Student student : students) {
             reports.add(generateStudentReport(student.getId(), week));
         }
-        return reports;
+
+        reports.sort(Comparator.comparing(
+                report -> String.valueOf(report.getOrDefault("studentLastName", "")),
+                String.CASE_INSENSITIVE_ORDER
+        ));
+
+        Set<Long> submittedEvaluatorIds = peerEvaluationRepository.findByWeek(week).stream()
+                .map(PeerEvaluation::getEvaluator)
+                .filter(Objects::nonNull)
+                .filter(evaluator -> evaluator.getSection() != null && evaluator.getSection().getId().equals(sectionId))
+                .filter(evaluator -> evaluator.getTeam() != null)
+                .map(Student::getId)
+                .collect(Collectors.toSet());
+
+        List<Map<String, Object>> missingEvaluators = students.stream()
+                .filter(student -> student.getTeam() != null)
+                .filter(student -> !submittedEvaluatorIds.contains(student.getId()))
+                .sorted(Comparator.comparing(Student::getLastName, String.CASE_INSENSITIVE_ORDER)
+                        .thenComparing(Student::getFirstName, String.CASE_INSENSITIVE_ORDER))
+                .map(student -> {
+                    Map<String, Object> dto = new LinkedHashMap<>();
+                    dto.put("id", student.getId());
+                    dto.put("name", student.getFirstName() + " " + student.getLastName());
+                    dto.put("teamName", student.getTeam() != null ? student.getTeam().getName() : null);
+                    return dto;
+                })
+                .collect(Collectors.toList());
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("week", week);
+        response.put("students", reports);
+        response.put("missingEvaluators", missingEvaluators);
+        return response;
     }
 
     private void validateSubmissionWeek(Student evaluator, Integer week) {

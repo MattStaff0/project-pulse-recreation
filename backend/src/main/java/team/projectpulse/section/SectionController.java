@@ -6,6 +6,7 @@ import team.projectpulse.course.Course;
 import team.projectpulse.course.CourseRepository;
 import team.projectpulse.rubric.Rubric;
 import team.projectpulse.rubric.RubricRepository;
+import team.projectpulse.security.AuthorizationService;
 import team.projectpulse.system.Result;
 import team.projectpulse.system.StatusCode;
 
@@ -15,20 +16,23 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("${api.endpoint.base-url}/sections")
-@PreAuthorize("hasRole('admin')")
 public class SectionController {
 
     private final SectionService sectionService;
     private final CourseRepository courseRepository;
     private final RubricRepository rubricRepository;
+    private final AuthorizationService authorizationService;
 
-    public SectionController(SectionService sectionService, CourseRepository courseRepository, RubricRepository rubricRepository) {
+    public SectionController(SectionService sectionService, CourseRepository courseRepository, RubricRepository rubricRepository,
+                             AuthorizationService authorizationService) {
         this.sectionService = sectionService;
         this.courseRepository = courseRepository;
         this.rubricRepository = rubricRepository;
+        this.authorizationService = authorizationService;
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('admin', 'instructor')")
     public Result findAll(@RequestParam(required = false) Long courseId,
                           @RequestParam(required = false) String name) {
         List<Section> sections;
@@ -48,10 +52,12 @@ public class SectionController {
     @GetMapping("/{id}")
     public Result findById(@PathVariable Long id) {
         Section section = sectionService.findById(id);
+        authorizationService.requireCanReadSection(section.getId());
         return new Result(true, StatusCode.SUCCESS, "Find section successfully", toDetailDto(section));
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('admin')")
     public Result create(@RequestBody Map<String, Object> body) {
         Section section = new Section();
         section.setName((String) body.get("name"));
@@ -72,6 +78,7 @@ public class SectionController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('admin')")
     public Result update(@PathVariable Long id, @RequestBody Map<String, Object> body) {
         Section update = new Section();
         update.setName((String) body.get("name"));
@@ -86,12 +93,14 @@ public class SectionController {
     }
 
     @PutMapping("/{id}/active-weeks")
+    @PreAuthorize("hasRole('admin')")
     public Result updateActiveWeeks(@PathVariable Long id, @RequestBody Map<String, String> body) {
         Section section = sectionService.updateActiveWeeks(id, body.get("activeWeeks"));
         return new Result(true, StatusCode.SUCCESS, "Active weeks updated", toDto(section));
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('admin')")
     public Result delete(@PathVariable Long id) {
         sectionService.delete(id);
         return new Result(true, StatusCode.SUCCESS, "Section deleted successfully");
@@ -106,6 +115,7 @@ public class SectionController {
         dto.put("activeWeeks", s.getActiveWeeks());
         dto.put("courseId", s.getCourse() != null ? s.getCourse().getId() : null);
         dto.put("rubricId", s.getRubric() != null ? s.getRubric().getId() : null);
+        dto.put("teamNames", s.getTeams().stream().map(team -> team.getName()).sorted().collect(Collectors.toList()));
         dto.put("numberOfTeams", s.getTeams().size());
         dto.put("numberOfStudents", s.getStudents().size());
         return dto;

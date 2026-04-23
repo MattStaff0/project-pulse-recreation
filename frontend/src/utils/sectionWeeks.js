@@ -57,11 +57,22 @@ export function getAllowedEvaluationWeek(section, now = new Date()) {
 
 export function getEvaluationWeekOptions(section, now = new Date()) {
   const activeWeeks = parseActiveWeeks(section?.activeWeeks)
-  if (!activeWeeks.length) return [1]
+  if (!activeWeeks.length) {
+    return {
+      activeWeeks: Array.from({ length: 15 }, (_, index) => index + 1),
+      allowedWeek: null,
+      defaultWeek: 1
+    }
+  }
   const allowedWeek = getAllowedEvaluationWeek(section, now)
   return {
     activeWeeks,
     allowedWeek,
     defaultWeek: allowedWeek ?? activeWeeks.at(-1)
   }
+}
+
+export function getActivityWeekOptions(section) {
+  const activeWeeks = parseActiveWeeks(section?.activeWeeks)
+  return activeWeeks.length ? activeWeeks : Array.from({ length: 15 }, (_, index) => index + 1)
 }

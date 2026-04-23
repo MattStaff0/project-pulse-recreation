@@ -55,6 +55,30 @@ public class AuthorizationService {
         throw new AccessDeniedException("No permission");
     }
 
+    public void requireCanReadSection(Long sectionId) {
+        if (hasRole("admin") || hasRole("instructor")) {
+            return;
+        }
+        Student currentStudent = currentStudent();
+        if (sectionId != null && currentStudent.getSection() != null
+                && sectionId.equals(currentStudent.getSection().getId())) {
+            return;
+        }
+        throw new AccessDeniedException("No permission");
+    }
+
+    public void requireCanReadTeam(Long teamId) {
+        if (hasRole("admin") || hasRole("instructor")) {
+            return;
+        }
+        Student currentStudent = currentStudent();
+        if (teamId != null && currentStudent.getTeam() != null
+                && teamId.equals(currentStudent.getTeam().getId())) {
+            return;
+        }
+        throw new AccessDeniedException("No permission");
+    }
+
     public void requireCanReadActivities(Long studentId, Long teamId) {
         if (hasRole("admin") || hasRole("instructor")) {
             return;
