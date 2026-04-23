@@ -140,7 +140,10 @@ router.beforeEach((to, from, next) => {
     const requiredPerms = to.meta.requiresPermissions
     // Check if user has at least one required permission
     const hasPermission = requiredPerms.some(p => userRoles.includes(p))
-    if (!hasPermission) return next('/403')
+    if (!hasPermission) {
+      if (userRoles.includes('admin')) return next('/')
+      return next('/403')
+    }
   }
 
   next()

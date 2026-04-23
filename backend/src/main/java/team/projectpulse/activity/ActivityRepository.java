@@ -8,4 +8,6 @@ public interface ActivityRepository extends JpaRepository<Activity, Long> {
     List<Activity> findByTeamIdAndWeek(Long teamId, Integer week);
     List<Activity> findByStudentId(Long studentId);
     List<Activity> findByTeamId(Long teamId);
+    void deleteByStudentId(Long studentId);
+    void deleteByTeamId(Long teamId);
 }
