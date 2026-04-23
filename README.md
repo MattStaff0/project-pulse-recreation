@@ -120,6 +120,14 @@ The dev data initializer creates the following accounts:
 | Student    | d.taylor@abc.edu    | 123456   |
 | Student    | l.anderson@abc.edu  | 123456   |
 
+### Production Login (Azure)
+
+| Role  | Email                    | Password  |
+|-------|--------------------------|-----------|
+| Admin | admin@projectpulse.com   | Admin123  |
+
+> See `docs/azure-deployment-guide.md` for full Azure deployment details.
+
 ---
 
 ## Viewing Emails Locally

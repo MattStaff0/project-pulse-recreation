@@ -1,0 +1,31 @@
+spring:
+  datasource:
+    url: jdbc:sqlserver://project-pulse-sql-tcu2026.database.windows.net:1433;database=project-pulse;encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30;
+    username: ${AZURE_SQL_USER:pulseadmin}
+    password: ${AZURE_SQL_PASSWORD}
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+  flyway:
+    enabled: false
+  autoconfigure:
+    exclude: org.springframework.boot.actuate.autoconfigure.mail.MailHealthContributorAutoConfiguration
+  mail:
+    host: ${MAIL_HOST:localhost}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+front-end:
+  url: ${FRONTEND_URL:https://project-pulse-frontend.azurestaticapps.net}
