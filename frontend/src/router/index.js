@@ -92,6 +92,7 @@ const routes = [
 
       // Student routes
       { path: 'my-activities', name: 'MyActivities', component: MyActivities, meta: { title: 'My Activities', icon: 'Edit', isMenuItem: true, requiresPermissions: ['student'] } },
+      { path: 'my-team-activities', name: 'MyTeamActivities', component: TeamActivities, meta: { title: 'Team WAR', icon: 'Notebook', isMenuItem: true, requiresPermissions: ['student'] } },
       { path: 'my-evaluations', name: 'MyEvaluations', component: MyEvaluations, meta: { title: 'Peer Evaluations', icon: 'Star', isMenuItem: true, requiresPermissions: ['student'] } },
       { path: 'submit-evaluation', name: 'SubmitEvaluation', component: SubmitEvaluation, meta: { title: 'Submit Evaluation', requiresPermissions: ['student'] } },
       { path: 'my-eval-report', name: 'MyEvalReport', component: MyEvalReport, meta: { title: 'My Eval Report', icon: 'DataAnalysis', isMenuItem: true, requiresPermissions: ['student'] } },

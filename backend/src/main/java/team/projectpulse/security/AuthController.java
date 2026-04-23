@@ -37,7 +37,9 @@ public class AuthController {
         userInfo.put("enabled", user.isEnabled());
         if (user instanceof Student student) {
             userInfo.put("teamId", student.getTeam() != null ? student.getTeam().getId() : null);
+            userInfo.put("teamName", student.getTeam() != null ? student.getTeam().getName() : null);
             userInfo.put("sectionId", student.getSection() != null ? student.getSection().getId() : null);
+            userInfo.put("sectionName", student.getSection() != null ? student.getSection().getName() : null);
         }
 
         Map<String, Object> loginResult = new HashMap<>();

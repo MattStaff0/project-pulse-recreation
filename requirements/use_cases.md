@@ -148,6 +148,12 @@ Table of Contents
 | Student | UC-25: Set up a student account UC-26: Edit an account UC-27: Manage activities in a weekly activity report UC-28: Submit a peer evaluation for the previous week UC-29: View her own peer evaluation report |
 | Instructor | UC-30: Set up an instructor account UC-31: Generate a peer evaluation report of the entire senior design section UC-32: Generate a WAR report of a senior design team UC-33: Generate a peer evaluation report of a student UC-34: Generate a WAR report of the student |
 
+## Current Scope Clarifications
+
+- Admin users do not use the self-service student pages (`my-activities`, `my-evaluations`, `submit-evaluation`, `my-eval-report`) and do not use the instructor reporting pages (`section-activities`, `section-eval-report`).
+- Email delivery remains in development form for this implementation pass; production email workflow details are out of scope.
+- The current implementation centers weekly report views. The period-based report language in UC-32 through UC-34 should be treated as future enhancement scope unless explicitly re-approved for implementation.
+
 # **Use Case 1: The Admin creates a rubric** {#use-case-1:-the-admin-creates-a-rubric}
 
 | UC ID and Name: | UC-1: Create a rubric |  |  |
@@ -172,7 +178,7 @@ Table of Contents
 
 # **Use Case 2: The Admin finds senior design sections** {#use-case-2:-the-admin-finds-senior-design-sections}
 
-| UC ID and Name: | UC-1: Find senior design sections |  |  |
+| UC ID and Name: | UC-2: Find senior design sections |  |  |
 | ----: | :---- | ----: | :---- |
 | Created By: |  | Date Created: |  |
 | Primary Actor: | Admin | Secondary Actors: |  |
@@ -194,7 +200,7 @@ Table of Contents
 
 # **Use Case 3: The Admin views a senior design section** {#use-case-3:-the-admin-views-a-senior-design-section}
 
-| UC ID and Name: | UC-2: View a senior design section |  |  |
+| UC ID and Name: | UC-3: View a senior design section |  |  |
 | ----: | :---- | ----: | :---- |
 | Created By: |  | Date Created: |  |
 | Primary Actor: | Admin | Secondary Actors: |  |
@@ -216,7 +222,7 @@ Table of Contents
 
 # **Use Case 4: The Admin creates a senior design section** {#use-case-4:-the-admin-creates-a-senior-design-section}
 
-| UC ID and Name: | UC-3: Create a senior design section |  |  |
+| UC ID and Name: | UC-4: Create a senior design section |  |  |
 | ----: | :---- | ----: | :---- |
 | Created By: |  | Date Created: |  |
 | Primary Actor: | Admin | Secondary Actors: |  |
@@ -238,7 +244,7 @@ Table of Contents
 
 # **Use Case 5: The Admin edits a senior design section** {#use-case-5:-the-admin-edits-a-senior-design-section}
 
-| UC ID and Name: | UC-4: Edit a senior design section |  |  |
+| UC ID and Name: | UC-5: Edit a senior design section |  |  |
 | ----: | :---- | ----: | :---- |
 | Created By: |  | Date Created: |  |
 | Primary Actor: | Admin | Secondary Actors: |  |
@@ -260,7 +266,7 @@ Table of Contents
 
 # **Use Case 6: The Admin sets up active weeks for a senior design section** {#use-case-6:-the-admin-sets-up-active-weeks-for-a-senior-design-section}
 
-| UC ID and Name: | UC-5: Set up active weeks for a senior design section |  |  |
+| UC ID and Name: | UC-6: Set up active weeks for a senior design section |  |  |
 | ----: | :---- | ----: | :---- |
 | Created By: |  | Date Created: |  |
 | Primary Actor: | Admin | Secondary Actors: |  |
@@ -634,7 +640,7 @@ Table of Contents
 
 # **Use Case 23: The Admin deactivate an instructor** {#use-case-23:-the-admin-deactivate-an-instructor}
 
-| UC ID and Name: | UC-23: Deactivate an instructor |  |  |
+| UC ID and Name: | UC-24: Reactivate an instructor |  |  |
 | ----: | :---- | ----: | :---- |
 | Created By: |  | Date Created: |  |
 | Primary Actor: | Admin | Secondary Actors: |  |

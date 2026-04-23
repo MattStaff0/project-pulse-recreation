@@ -2,6 +2,7 @@ package team.projectpulse.team;
 
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import team.projectpulse.security.AuthorizationService;
 import team.projectpulse.section.Section;
 import team.projectpulse.section.SectionService;
 import team.projectpulse.system.Result;
@@ -12,18 +13,20 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("${api.endpoint.base-url}/teams")
-@PreAuthorize("hasAnyRole('admin', 'instructor')")
 public class TeamController {
 
     private final TeamService teamService;
     private final SectionService sectionService;
+    private final AuthorizationService authorizationService;
 
-    public TeamController(TeamService teamService, SectionService sectionService) {
+    public TeamController(TeamService teamService, SectionService sectionService, AuthorizationService authorizationService) {
         this.teamService = teamService;
         this.sectionService = sectionService;
+        this.authorizationService = authorizationService;
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('admin', 'instructor')")
     public Result findAll(@RequestParam(required = false) Long sectionId) {
         List<Team> teams = sectionId != null ? teamService.findBySectionId(sectionId) : teamService.findAll();
         return new Result(true, StatusCode.SUCCESS, "Find teams successfully",
@@ -32,6 +35,7 @@ public class TeamController {
 
     @GetMapping("/{id}")
     public Result findById(@PathVariable Long id) {
+        authorizationService.requireCanReadTeam(id);
         return new Result(true, StatusCode.SUCCESS, "Find team successfully", toDetailDto(teamService.findById(id)));
     }
 
@@ -102,6 +106,10 @@ public class TeamController {
         dto.put("websiteUrl", t.getWebsiteUrl());
         dto.put("sectionId", t.getSection() != null ? t.getSection().getId() : null);
         dto.put("sectionName", t.getSection() != null ? t.getSection().getName() : null);
+        dto.put("instructorNames", t.getInstructors().stream()
+                .map(i -> i.getFirstName() + " " + i.getLastName())
+                .sorted()
+                .collect(Collectors.toList()));
         dto.put("numberOfStudents", t.getStudents().size());
         return dto;
     }
