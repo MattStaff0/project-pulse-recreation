@@ -1,8 +1,15 @@
 <template>
   <div class="page-container">
     <h1 class="page-title">Submit Peer Evaluation</h1>
-    <el-select v-model="selectedWeek" placeholder="Select Week" style="margin-bottom:16px;width:200px">
-      <el-option v-for="w in 15" :key="w" :label="`Week ${w}`" :value="w" />
+    <el-alert
+      v-if="noEligibleWeekMessage"
+      :title="noEligibleWeekMessage"
+      type="warning"
+      show-icon
+      style="margin-bottom:16px"
+    />
+    <el-select v-model="selectedWeek" placeholder="Select Week" style="margin-bottom:16px;width:200px" :disabled="true">
+      <el-option v-for="w in availableWeeks" :key="w" :label="`Week ${w}`" :value="w" />
     </el-select>
 
     <div v-if="teammates.length === 0 && !loading">
@@ -23,12 +30,21 @@
       </el-row>
     </el-card>
 
-    <el-button type="primary" @click="handleSubmit" :loading="submitting" v-if="teammates.length > 0" style="margin-top:12px">Submit All Evaluations</el-button>
+    <el-button
+      type="primary"
+      @click="handleSubmit"
+      :loading="submitting"
+      :disabled="!selectedWeek"
+      v-if="teammates.length > 0"
+      style="margin-top:12px"
+    >
+      Submit All Evaluations
+    </el-button>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, reactive, watch } from 'vue'
+import { ref, onMounted, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useUserInfoStore } from '@/stores/userInfo'
@@ -36,6 +52,7 @@ import { getStudents } from '@/apis/student'
 import { getRubricById } from '@/apis/rubric'
 import { getSectionById } from '@/apis/section'
 import { createEvaluation } from '@/apis/evaluation'
+import { getEvaluationWeekOptions } from '@/utils/sectionWeeks'
 
 const router = useRouter()
 const userInfoStore = useUserInfoStore()
@@ -44,6 +61,8 @@ const teammates = ref([])
 const criteria = ref([])
 const loading = ref(false)
 const submitting = ref(false)
+const availableWeeks = ref([])
+const noEligibleWeekMessage = ref('')
 const evalData = reactive({})
 
 onMounted(loadData)
@@ -66,6 +85,16 @@ async function loadData() {
     // Get rubric criteria from section
     const secRes = await getSectionById(userInfoStore.userInfo.sectionId)
     const section = secRes.data || {}
+    const weekOptions = getEvaluationWeekOptions(section)
+    availableWeeks.value = weekOptions.allowedWeek ? [weekOptions.allowedWeek] : []
+    selectedWeek.value = weekOptions.allowedWeek
+    if (!weekOptions.allowedWeek) {
+      noEligibleWeekMessage.value = 'There is no eligible peer-evaluation week available right now.'
+      teammates.value = []
+      criteria.value = []
+      return
+    }
+    noEligibleWeekMessage.value = ''
     if (section.rubricId) {
       const rubRes = await getRubricById(section.rubricId)
       const rubric = rubRes.data || null
@@ -83,6 +112,10 @@ async function loadData() {
 }
 
 async function handleSubmit() {
+  if (!selectedWeek.value) {
+    ElMessage.warning('There is no eligible evaluation week available right now.')
+    return
+  }
   submitting.value = true
   try {
     for (const mate of teammates.value) {
