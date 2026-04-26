@@ -79,11 +79,18 @@ The TCU Azure for Students subscription has policy restrictions:
 
 ## Production Login Credentials
 
-On first deploy, a `ProdDataInitializer` creates an admin account (only runs if the database is empty):
+On first deploy, a `ProdDataInitializer` seeds the same accounts as the dev environment (only runs if the database is empty):
 
 | Role | Email | Password |
 |------|-------|----------|
-| Admin | `admin@projectpulse.com` | `Admin123` |
+| Admin | `b.wei@abc.edu` | `123456` |
+| Instructor | `s.johnson@abc.edu` | `123456` |
+| Student | `j.smith@abc.edu` | `123456` |
+| Student | `e.davis@abc.edu` | `123456` |
+| Student | `m.brown@abc.edu` | `123456` |
+| Student | `s.wilson@abc.edu` | `123456` |
+| Student | `d.taylor@abc.edu` | `123456` |
+| Student | `l.anderson@abc.edu` | `123456` |
 
 ---
 
@@ -227,7 +234,13 @@ cd frontend
 npm run build
 
 # 2. Deploy
-swa deploy dist --deployment-token 8b3598b586bedb76edd7ce21c4b17c3e071a4f034e2d1484593d22e5a20d81cc07-e6dcdc2a-9d94-4614-b654-0ce8160c978801024280c4b98110
+swa deploy dist --deployment-token 8b3598b586bedb76edd7ce21c4b17c3e071a4f034e2d1484593d22e5a20d81cc07-e6dcdc2a-9d94-4614-b654-0ce8160c978801024280c4b98110 --env production
+```
+
+### Full Redeploy (backend + frontend, single command)
+
+```bash
+cd /Users/matt_staff/Desktop/Tcu\ computer\ science/Web\ Technologies/project-pulse-recreation/backend && ./mvnw clean package -DskipTests && az webapp deploy --resource-group project-pulse-rg --name project-pulse-api-tcu2026 --src-path target/project-pulse-0.0.1-SNAPSHOT.jar --type jar && cd /Users/matt_staff/Desktop/Tcu\ computer\ science/Web\ Technologies/project-pulse-recreation/frontend && npm run build && swa deploy dist --deployment-token 8b3598b586bedb76edd7ce21c4b17c3e071a4f034e2d1484593d22e5a20d81cc07-e6dcdc2a-9d94-4614-b654-0ce8160c978801024280c4b98110 --env production
 ```
 
 ---

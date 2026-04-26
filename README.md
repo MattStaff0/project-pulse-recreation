@@ -122,9 +122,18 @@ The dev data initializer creates the following accounts:
 
 ### Production Login (Azure)
 
-| Role  | Email                    | Password  |
-|-------|--------------------------|-----------|
-| Admin | admin@projectpulse.com   | Admin123  |
+Production is seeded with the same accounts as dev:
+
+| Role       | Email               | Password |
+|------------|---------------------|----------|
+| Admin      | b.wei@abc.edu       | 123456   |
+| Instructor | s.johnson@abc.edu   | 123456   |
+| Student    | j.smith@abc.edu     | 123456   |
+| Student    | e.davis@abc.edu     | 123456   |
+| Student    | m.brown@abc.edu     | 123456   |
+| Student    | s.wilson@abc.edu    | 123456   |
+| Student    | d.taylor@abc.edu    | 123456   |
+| Student    | l.anderson@abc.edu  | 123456   |
 
 > See `docs/azure-deployment-guide.md` for full Azure deployment details.
 
