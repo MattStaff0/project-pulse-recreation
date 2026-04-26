@@ -4,6 +4,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import team.projectpulse.course.Course;
 import team.projectpulse.course.CourseRepository;
+import team.projectpulse.security.AuthorizationService;
 import team.projectpulse.system.Result;
 import team.projectpulse.system.StatusCode;
 
@@ -12,18 +13,21 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("${api.endpoint.base-url}/rubrics")
-@PreAuthorize("hasRole('admin')")
 public class RubricController {
 
     private final RubricService rubricService;
     private final CourseRepository courseRepository;
+    private final AuthorizationService authorizationService;
 
-    public RubricController(RubricService rubricService, CourseRepository courseRepository) {
+    public RubricController(RubricService rubricService, CourseRepository courseRepository,
+                            AuthorizationService authorizationService) {
         this.rubricService = rubricService;
         this.courseRepository = courseRepository;
+        this.authorizationService = authorizationService;
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('admin')")
     public Result findAll(@RequestParam(required = false) Long courseId) {
         List<Rubric> rubrics = courseId != null ? rubricService.findByCourseId(courseId) : rubricService.findAll();
         return new Result(true, StatusCode.SUCCESS, "Find rubrics successfully",
@@ -32,10 +36,12 @@ public class RubricController {
 
     @GetMapping("/{id}")
     public Result findById(@PathVariable Long id) {
+        authorizationService.requireCanReadRubric(id);
         return new Result(true, StatusCode.SUCCESS, "Find rubric successfully", toDto(rubricService.findById(id)));
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('admin')")
     @SuppressWarnings("unchecked")
     public Result create(@RequestBody Map<String, Object> body) {
         Rubric rubric = new Rubric();
@@ -58,6 +64,7 @@ public class RubricController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('admin')")
     @SuppressWarnings("unchecked")
     public Result update(@PathVariable Long id, @RequestBody Map<String, Object> body) {
         Rubric update = new Rubric();
@@ -76,6 +83,7 @@ public class RubricController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('admin')")
     public Result delete(@PathVariable Long id) {
         rubricService.delete(id);
         return new Result(true, StatusCode.SUCCESS, "Rubric deleted successfully");

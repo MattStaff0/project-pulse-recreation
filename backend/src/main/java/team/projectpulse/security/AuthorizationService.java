@@ -67,6 +67,20 @@ public class AuthorizationService {
         throw new AccessDeniedException("No permission");
     }
 
+    public void requireCanReadRubric(Long rubricId) {
+        if (hasRole("admin") || hasRole("instructor")) {
+            return;
+        }
+        Student currentStudent = currentStudent();
+        if (rubricId != null
+                && currentStudent.getSection() != null
+                && currentStudent.getSection().getRubric() != null
+                && rubricId.equals(currentStudent.getSection().getRubric().getId())) {
+            return;
+        }
+        throw new AccessDeniedException("No permission");
+    }
+
     public void requireCanReadTeam(Long teamId) {
         if (hasRole("admin") || hasRole("instructor")) {
             return;
