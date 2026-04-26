@@ -20,6 +20,10 @@ Thumbs.db
 # Build output
 frontend/dist/
 
+# Azure deployment logs
+backend/logs/
+backend/logs.zip
+
 # MySQL data (if local)
 mysql_data/
 
