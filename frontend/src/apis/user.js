@@ -9,5 +9,7 @@ export function updateUser(id, data) {
 }
 
 export function changePassword(id, oldPassword, newPassword) {
-  return request.put(`/users/${id}/password`, { oldPassword, newPassword })
+  return request.put(`/users/${id}/password`, { oldPassword, newPassword }, {
+    suppressForbiddenRedirect: true
+  })
 }
