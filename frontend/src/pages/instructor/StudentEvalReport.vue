@@ -4,8 +4,9 @@
       <h1 class="page-title">Peer Evaluation Report - {{ report?.studentName }}</h1>
       <el-button @click="$router.back()">Back</el-button>
     </div>
-    <el-select v-model="selectedWeek" placeholder="Week" style="margin-bottom:16px;width:200px" @change="load">
-      <el-option v-for="w in 15" :key="w" :label="`Week ${w}`" :value="w" />
+
+    <el-select v-model="selectedWeek" placeholder="Week" style="margin-bottom:16px;width:220px" @change="load">
+      <el-option v-for="week in availableWeeks" :key="week" :label="`Week ${week}`" :value="week" />
     </el-select>
 
     <el-card v-loading="loading" style="border-radius:12px" v-if="report">
@@ -20,7 +21,7 @@
 
       <h3 style="margin-top:20px">Public Comments</h3>
       <ul v-if="report.publicComments?.length">
-        <li v-for="(c, i) in report.publicComments" :key="i" style="margin:8px 0">{{ c }}</li>
+        <li v-for="(comment, index) in report.publicComments" :key="index" style="margin:8px 0">{{ comment }}</li>
       </ul>
       <el-empty v-else description="No comments" :image-size="60" />
 
@@ -36,27 +37,52 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
-import { getStudentReport, getEvaluations } from '@/apis/evaluation'
+import { getEvaluations, getStudentReport } from '@/apis/evaluation'
+import { getSectionById } from '@/apis/section'
+import { getStudentById } from '@/apis/student'
+import { getEvaluationWeekOptions } from '@/utils/sectionWeeks'
 
 const route = useRoute()
 const studentId = route.params.studentId
 const selectedWeek = ref(Number(route.query.week) || 1)
+const availableWeeks = ref([1])
 const report = ref(null)
 const evaluations = ref([])
 const loading = ref(false)
 
+onMounted(async () => {
+  try {
+    const studentResponse = await getStudentById(studentId)
+    const student = studentResponse.data || {}
+    if (student.sectionId) {
+      const sectionResponse = await getSectionById(student.sectionId)
+      const weekOptions = getEvaluationWeekOptions(sectionResponse.data || {})
+      availableWeeks.value = weekOptions.activeWeeks
+      if (!availableWeeks.value.includes(selectedWeek.value)) {
+        selectedWeek.value = weekOptions.defaultWeek
+      }
+    }
+  } catch {}
+
+  await load()
+})
+
 async function load() {
   loading.value = true
   try {
-    const [reportRes, evalsRes] = await Promise.all([
+    const [reportResponse, evaluationsResponse] = await Promise.all([
       getStudentReport(studentId, selectedWeek.value),
       getEvaluations({ evaluateeId: studentId, week: selectedWeek.value })
     ])
-    report.value = reportRes.data || null
-    evaluations.value = evalsRes.data || []
-  } catch {} finally { loading.value = false }
+    report.value = reportResponse.data || null
+    evaluations.value = evaluationsResponse.data || []
+  } catch {
+    report.value = null
+    evaluations.value = []
+  } finally {
+    loading.value = false
+  }
 }
-onMounted(load)
 </script>

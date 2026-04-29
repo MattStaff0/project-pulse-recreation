@@ -1,6 +1,8 @@
 package team.projectpulse.student;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import team.projectpulse.security.AuthorizationService;
 import team.projectpulse.system.Result;
 import team.projectpulse.system.StatusCode;
 
@@ -12,15 +14,27 @@ import java.util.stream.Collectors;
 public class StudentController {
 
     private final StudentService studentService;
+    private final AuthorizationService authorizationService;
 
-    public StudentController(StudentService studentService) {
+    public StudentController(StudentService studentService, AuthorizationService authorizationService) {
         this.studentService = studentService;
+        this.authorizationService = authorizationService;
     }
 
     @GetMapping
     public Result findAll(@RequestParam(required = false) Long sectionId,
                           @RequestParam(required = false) Long teamId,
                           @RequestParam(required = false) String name) {
+        if (!authorizationService.hasRole("admin") && !authorizationService.hasRole("instructor")) {
+            if (teamId != null) {
+                authorizationService.requireCanReadTeam(teamId);
+            } else if (sectionId != null) {
+                authorizationService.requireCanReadSection(sectionId);
+            } else {
+                throw new org.springframework.security.access.AccessDeniedException("No permission");
+            }
+        }
+
         List<Student> students;
         if (sectionId != null) students = studentService.findBySectionId(sectionId);
         else if (teamId != null) students = studentService.findByTeamId(teamId);
@@ -38,6 +52,7 @@ public class StudentController {
     }
 
     @GetMapping("/unassigned")
+    @PreAuthorize("hasAnyRole('admin', 'instructor')")
     public Result findUnassigned(@RequestParam Long sectionId) {
         return new Result(true, StatusCode.SUCCESS, "Find unassigned students",
                 studentService.findUnassignedBySectionId(sectionId).stream().map(this::toDto).collect(Collectors.toList()));
@@ -45,10 +60,12 @@ public class StudentController {
 
     @GetMapping("/{id}")
     public Result findById(@PathVariable Long id) {
+        authorizationService.requireCanAccessStudent(id);
         return new Result(true, StatusCode.SUCCESS, "Find student successfully", toDetailDto(studentService.findById(id)));
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('admin')")
     public Result update(@PathVariable Long id, @RequestBody Map<String, String> body) {
         Student update = new Student();
         update.setFirstName(body.get("firstName"));
@@ -58,6 +75,7 @@ public class StudentController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('admin')")
     public Result delete(@PathVariable Long id) {
         studentService.delete(id);
         return new Result(true, StatusCode.SUCCESS, "Student deleted successfully");

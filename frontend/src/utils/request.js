@@ -30,6 +30,7 @@ request.interceptors.response.use(
     const now = Date.now()
     const status = error.response?.status
     const message = error.response?.data?.message || error.message
+    const suppressForbiddenRedirect = error.config?.suppressForbiddenRedirect === true
 
     if (status === 401) {
       const tokenStore = useTokenStore()
@@ -40,7 +41,14 @@ request.interceptors.response.use(
         lastErrorTime = now
       }
     } else if (status === 403) {
-      router.push('/403')
+      if (suppressForbiddenRedirect) {
+        if (now - lastErrorTime > 2000) {
+          ElMessage.error(message || 'Failure to change password')
+          lastErrorTime = now
+        }
+      } else {
+        router.push('/403')
+      }
     } else if (status === 404) {
       if (now - lastErrorTime > 2000) {
         ElMessage.error(message || 'Resource not found')

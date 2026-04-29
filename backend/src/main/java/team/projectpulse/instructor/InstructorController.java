@@ -1,5 +1,6 @@
 package team.projectpulse.instructor;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import team.projectpulse.system.Result;
 import team.projectpulse.system.StatusCode;
@@ -10,6 +11,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("${api.endpoint.base-url}/instructors")
+@PreAuthorize("hasRole('admin')")
 public class InstructorController {
 
     private final InstructorService instructorService;

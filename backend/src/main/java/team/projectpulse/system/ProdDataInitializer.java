@@ -27,8 +27,8 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Component
-@Profile("dev")
-public class DataInitializer implements CommandLineRunner {
+@Profile("prod")
+public class ProdDataInitializer implements CommandLineRunner {
 
     private final CourseRepository courseRepository;
     private final SectionRepository sectionRepository;
@@ -40,11 +40,11 @@ public class DataInitializer implements CommandLineRunner {
     private final PeerEvaluationRepository evaluationRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public DataInitializer(CourseRepository courseRepository, SectionRepository sectionRepository,
-                           TeamRepository teamRepository, StudentRepository studentRepository,
-                           InstructorRepository instructorRepository, RubricRepository rubricRepository,
-                           ActivityRepository activityRepository, PeerEvaluationRepository evaluationRepository,
-                           PasswordEncoder passwordEncoder) {
+    public ProdDataInitializer(CourseRepository courseRepository, SectionRepository sectionRepository,
+                               TeamRepository teamRepository, StudentRepository studentRepository,
+                               InstructorRepository instructorRepository, RubricRepository rubricRepository,
+                               ActivityRepository activityRepository, PeerEvaluationRepository evaluationRepository,
+                               PasswordEncoder passwordEncoder) {
         this.courseRepository = courseRepository;
         this.sectionRepository = sectionRepository;
         this.teamRepository = teamRepository;
@@ -58,6 +58,11 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
+        // Only seed if the database is empty
+        if (instructorRepository.count() > 0) {
+            return;
+        }
+
         // Create admin instructor
         Instructor admin = new Instructor();
         admin.setFirstName("Bingyang");

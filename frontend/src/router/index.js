@@ -92,16 +92,17 @@ const routes = [
 
       // Student routes
       { path: 'my-activities', name: 'MyActivities', component: MyActivities, meta: { title: 'My Activities', icon: 'Edit', isMenuItem: true, requiresPermissions: ['student'] } },
+      { path: 'my-team-activities', name: 'MyTeamActivities', component: TeamActivities, meta: { title: 'Team WAR', icon: 'Notebook', isMenuItem: true, requiresPermissions: ['student'] } },
       { path: 'my-evaluations', name: 'MyEvaluations', component: MyEvaluations, meta: { title: 'Peer Evaluations', icon: 'Star', isMenuItem: true, requiresPermissions: ['student'] } },
       { path: 'submit-evaluation', name: 'SubmitEvaluation', component: SubmitEvaluation, meta: { title: 'Submit Evaluation', requiresPermissions: ['student'] } },
       { path: 'my-eval-report', name: 'MyEvalReport', component: MyEvalReport, meta: { title: 'My Eval Report', icon: 'DataAnalysis', isMenuItem: true, requiresPermissions: ['student'] } },
 
       // Instructor routes
-      { path: 'section-activities', name: 'SectionActivities', component: SectionActivities, meta: { title: 'Section Activities', icon: 'Notebook', isMenuItem: true, requiresPermissions: ['admin', 'instructor'] } },
-      { path: 'team-activities/:teamId', name: 'TeamActivities', component: TeamActivities, meta: { title: 'Team Activities', requiresPermissions: ['admin', 'instructor'] } },
-      { path: 'student-activities/:studentId', name: 'StudentActivities', component: StudentActivities, meta: { title: 'Student Activities', requiresPermissions: ['admin', 'instructor'] } },
-      { path: 'section-eval-report', name: 'SectionEvalReport', component: SectionEvalReport, meta: { title: 'Section Eval Report', icon: 'TrendCharts', isMenuItem: true, requiresPermissions: ['admin', 'instructor'] } },
-      { path: 'student-eval-report/:studentId', name: 'StudentEvalReport', component: StudentEvalReport, meta: { title: 'Student Eval Report', requiresPermissions: ['admin', 'instructor'] } },
+      { path: 'section-activities', name: 'SectionActivities', component: SectionActivities, meta: { title: 'Section Activities', icon: 'Notebook', isMenuItem: true, requiresPermissions: ['instructor'] } },
+      { path: 'team-activities/:teamId', name: 'TeamActivities', component: TeamActivities, meta: { title: 'Team Activities', requiresPermissions: ['instructor'] } },
+      { path: 'student-activities/:studentId', name: 'StudentActivities', component: StudentActivities, meta: { title: 'Student Activities', requiresPermissions: ['instructor'] } },
+      { path: 'section-eval-report', name: 'SectionEvalReport', component: SectionEvalReport, meta: { title: 'Section Eval Report', icon: 'TrendCharts', isMenuItem: true, requiresPermissions: ['instructor'] } },
+      { path: 'student-eval-report/:studentId', name: 'StudentEvalReport', component: StudentEvalReport, meta: { title: 'Student Eval Report', requiresPermissions: ['instructor'] } },
     ]
   }
 ]
@@ -138,11 +139,12 @@ router.beforeEach((to, from, next) => {
   if (to.meta.requiresPermissions && isAuthenticated) {
     const userRoles = userInfoStore.roles
     const requiredPerms = to.meta.requiresPermissions
-    // Admin has access to everything
-    if (userRoles.includes('admin')) return next()
     // Check if user has at least one required permission
     const hasPermission = requiredPerms.some(p => userRoles.includes(p))
-    if (!hasPermission) return next('/403')
+    if (!hasPermission) {
+      if (userRoles.includes('admin')) return next('/')
+      return next('/403')
+    }
   }
 
   next()

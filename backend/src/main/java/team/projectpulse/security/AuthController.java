@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import team.projectpulse.system.Result;
 import team.projectpulse.system.StatusCode;
+import team.projectpulse.student.Student;
 
 import team.projectpulse.student.Student;
 
@@ -36,6 +37,12 @@ public class AuthController {
         userInfo.put("email", user.getEmail());
         userInfo.put("roles", user.getRoles());
         userInfo.put("enabled", user.isEnabled());
+        if (user instanceof Student student) {
+            userInfo.put("teamId", student.getTeam() != null ? student.getTeam().getId() : null);
+            userInfo.put("teamName", student.getTeam() != null ? student.getTeam().getName() : null);
+            userInfo.put("sectionId", student.getSection() != null ? student.getSection().getId() : null);
+            userInfo.put("sectionName", student.getSection() != null ? student.getSection().getName() : null);
+        }
 
         if (user instanceof Student student) {
             userInfo.put("teamId", student.getTeam() != null ? student.getTeam().getId() : null);

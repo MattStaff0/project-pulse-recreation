@@ -1,6 +1,8 @@
 package team.projectpulse.team;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import team.projectpulse.security.AuthorizationService;
 import team.projectpulse.section.Section;
 import team.projectpulse.section.SectionService;
 import team.projectpulse.system.Result;
@@ -15,13 +17,16 @@ public class TeamController {
 
     private final TeamService teamService;
     private final SectionService sectionService;
+    private final AuthorizationService authorizationService;
 
-    public TeamController(TeamService teamService, SectionService sectionService) {
+    public TeamController(TeamService teamService, SectionService sectionService, AuthorizationService authorizationService) {
         this.teamService = teamService;
         this.sectionService = sectionService;
+        this.authorizationService = authorizationService;
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('admin', 'instructor')")
     public Result findAll(@RequestParam(required = false) Long sectionId) {
         List<Team> teams = sectionId != null ? teamService.findBySectionId(sectionId) : teamService.findAll();
         return new Result(true, StatusCode.SUCCESS, "Find teams successfully",
@@ -30,10 +35,12 @@ public class TeamController {
 
     @GetMapping("/{id}")
     public Result findById(@PathVariable Long id) {
+        authorizationService.requireCanReadTeam(id);
         return new Result(true, StatusCode.SUCCESS, "Find team successfully", toDetailDto(teamService.findById(id)));
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('admin')")
     public Result create(@RequestBody Map<String, Object> body) {
         Team team = new Team();
         team.setName((String) body.get("name"));
@@ -47,6 +54,7 @@ public class TeamController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('admin')")
     public Result update(@PathVariable Long id, @RequestBody Map<String, Object> body) {
         Team update = new Team();
         update.setName((String) body.get("name"));
@@ -56,30 +64,35 @@ public class TeamController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('admin')")
     public Result delete(@PathVariable Long id) {
         teamService.delete(id);
         return new Result(true, StatusCode.SUCCESS, "Team deleted successfully");
     }
 
     @PostMapping("/{teamId}/students/{studentId}")
+    @PreAuthorize("hasRole('admin')")
     public Result assignStudent(@PathVariable Long teamId, @PathVariable Long studentId) {
         teamService.assignStudentToTeam(teamId, studentId);
         return new Result(true, StatusCode.SUCCESS, "Student assigned to team successfully");
     }
 
     @DeleteMapping("/{teamId}/students/{studentId}")
+    @PreAuthorize("hasRole('admin')")
     public Result removeStudent(@PathVariable Long teamId, @PathVariable Long studentId) {
         teamService.removeStudentFromTeam(teamId, studentId);
         return new Result(true, StatusCode.SUCCESS, "Student removed from team successfully");
     }
 
     @PostMapping("/{teamId}/instructors/{instructorId}")
+    @PreAuthorize("hasRole('admin')")
     public Result assignInstructor(@PathVariable Long teamId, @PathVariable Long instructorId) {
         teamService.assignInstructorToTeam(teamId, instructorId);
         return new Result(true, StatusCode.SUCCESS, "Instructor assigned to team successfully");
     }
 
     @DeleteMapping("/{teamId}/instructors/{instructorId}")
+    @PreAuthorize("hasRole('admin')")
     public Result removeInstructor(@PathVariable Long teamId, @PathVariable Long instructorId) {
         teamService.removeInstructorFromTeam(teamId, instructorId);
         return new Result(true, StatusCode.SUCCESS, "Instructor removed from team successfully");
@@ -93,6 +106,10 @@ public class TeamController {
         dto.put("websiteUrl", t.getWebsiteUrl());
         dto.put("sectionId", t.getSection() != null ? t.getSection().getId() : null);
         dto.put("sectionName", t.getSection() != null ? t.getSection().getName() : null);
+        dto.put("instructorNames", t.getInstructors().stream()
+                .map(i -> i.getFirstName() + " " + i.getLastName())
+                .sorted()
+                .collect(Collectors.toList()));
         dto.put("numberOfStudents", t.getStudents().size());
         return dto;
     }
